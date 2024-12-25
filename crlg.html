@@ -98,6 +98,8 @@
 
         if (saveResponse.ok) {
           alert('Hasil pencarian telah disimpan ke crlg1.json di repo mgt');
+          // Mengalihkan ke path file crlg1.json setelah berhasil menyimpan
+          window.location.href = `https://github.com/Madani93/${repo}/blob/main/crlg1.json`;
         } else {
           throw new Error('Gagal menyimpan file ke repository');
         }
