@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waktu Sekarang</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #time {
+            font-size: 36px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Waktu Sekarang:</h1>
+    <div id="time"></div>
+
+    <script>
+        function updateTime() {
+            // Mendapatkan waktu saat ini
+            const now = new Date();
+
+            // Mengambil jam, menit, dan detik
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.get
