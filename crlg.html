@@ -79,8 +79,8 @@
           if (obj.hasOwnProperty(key)) {
             const value = obj[key];
             if (typeof value === 'string' && value.includes(searchWord)) {
-              // Menyimpan kolom yang mengandung kata pencarian
-              result.push({ [key]: value });
+              // Jika kata pencarian ditemukan, simpan seluruh objek pada kolom tersebut
+              result.push({ [key]: obj });
             } else if (typeof value === 'object') {
               // Rekursif mencari dalam objek yang lebih dalam
               const nestedResult = searchInJson(value, searchWord);
