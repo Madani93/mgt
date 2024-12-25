@@ -27,4 +27,18 @@
 
             // Mengambil jam, menit, dan detik
             const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.get
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+
+            // Menampilkan waktu dalam format HH:MM:SS
+            document.getElementById('time').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        // Memperbarui waktu setiap detik
+        setInterval(updateTime, 1000);
+
+        // Memanggil updateTime sekali untuk menampilkan waktu segera setelah halaman dimuat
+        updateTime();
+    </script>
+</body>
+</html>
