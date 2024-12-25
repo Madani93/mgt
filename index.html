@@ -3,42 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waktu Sekarang</title>
+    <title>Hitungan Mundur</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             margin-top: 50px;
         }
-        #time {
+        #timer {
             font-size: 36px;
             font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <h1>Waktu Sekarang:</h1>
-    <div id="time"></div>
+    <h1>Hitungan Mundur:</h1>
+    
+    <!-- Textbox untuk mengatur waktu -->
+    <input type="number" id="inputTime" placeholder="Detik" min="1">
+    <button onclick="startCountdown()">Mulai Hitung Mundur</button>
+
+    <div id="timer">00:00</div>
 
     <script>
-        function updateTime() {
-            // Mendapatkan waktu saat ini
-            const now = new Date();
-
-            // Mengambil jam, menit, dan detik
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const seconds = now.getSeconds().toString().padStart(2, '0');
-
-            // Menampilkan waktu dalam format HH:MM:SS
-            document.getElementById('time').textContent = `${hours}:${minutes}:${seconds}`;
-        }
-
-        // Memperbarui waktu setiap detik
-        setInterval(updateTime, 1000);
-
-        // Memanggil updateTime sekali untuk menampilkan waktu segera setelah halaman dimuat
-        updateTime();
-    </script>
-</body>
-</html>
+        let countdown;
+        
+        function startCountdown() {
