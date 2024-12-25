@@ -12,7 +12,7 @@
       const owner = 'Madani93'; // Owner repository sru1
       const repo = 'sru1'; // Nama repository sru1
       const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/`;
-
+      
       // Jika token atau kata pencarian tidak ada di URL, tampilkan peringatan
       if (!token || !searchWord) {
         alert('Token dan kata pencarian (q) harus ada di URL sebagai query parameter.');
@@ -22,7 +22,7 @@
       const result = [];
 
       try {
-        // Fetch data from GitHub repository
+        // Mengambil daftar file dari repositori GitHub
         const response = await fetch(apiUrl, {
           headers: {
             'Authorization': `token ${token}`,
@@ -30,27 +30,23 @@
           }
         });
 
-        console.log('GitHub API Response:', response);
-
         if (!response.ok) {
           throw new Error('Gagal mengambil data dari GitHub. Status: ' + response.status);
         }
 
         const files = await response.json();
-        console.log('Files in Repo:', files);
 
-        // Periksa setiap file dalam repository
+        // Memeriksa setiap file di dalam repositori
         for (const file of files) {
-          if (file.type === 'file' && file.name !== 'index') {
+          if (file.type === 'file' && file.name !== 'index') { // Menghindari file 'index'
             const fileResponse = await fetch(file.download_url);
-            const fileContent = await fileResponse.json(); // Parsing isi file sebagai JSON
-            console.log('File content:', fileContent);
-
-            // Cari kata pencarian dalam setiap objek JSON
+            const fileContent = await fileResponse.json(); // Mengambil dan memparsing konten JSON file
+          
+            // Mencari kata pencarian dalam konten JSON file
             const searchResult = searchInJson(fileContent, searchWord);
 
-            // Jika ditemukan, simpan hasilnya
             if (searchResult) {
+              // Jika ditemukan, simpan hasilnya
               result.push({
                 file: file.path,
                 found: searchResult
@@ -62,9 +58,9 @@
         // Menampilkan hasil pencarian langsung di halaman
         const resultContainer = document.getElementById('result');
         if (result.length > 0) {
-          resultContainer.textContent = JSON.stringify(result, null, 2);
+          resultContainer.innerHTML = JSON.stringify(result, null, 2); // Menampilkan hasil dalam format JSON
         } else {
-          resultContainer.textContent = 'Tidak ditemukan hasil untuk pencarian: "' + searchWord + '"';
+          resultContainer.textContent = `Tidak ditemukan hasil untuk pencarian: "${searchWord}"`;
         }
 
       } catch (error) {
