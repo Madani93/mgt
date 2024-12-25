@@ -17,9 +17,9 @@
     </style>
 </head>
 <body>
-    <h1>Hitungan Mundur:</h1>
+    <h1>Hitungan Mundur</h1>
     
-    <!-- Textbox untuk mengatur waktu -->
+    <!-- Input untuk mengatur waktu dalam detik -->
     <input type="number" id="inputTime" placeholder="Detik" min="1">
     <button onclick="startCountdown()">Mulai Hitung Mundur</button>
 
@@ -29,18 +29,19 @@
         let countdown;
         
         function startCountdown() {
-            // Mengambil nilai dari textbox (waktu dalam detik)
+            // Mendapatkan waktu dari input textbox
             let time = parseInt(document.getElementById('inputTime').value);
 
+            // Validasi input waktu
             if (isNaN(time) || time <= 0) {
-                alert("Masukkan waktu yang valid (lebih dari 0 detik)");
+                alert("Masukkan waktu yang valid (lebih dari 0 detik).");
                 return;
             }
 
-            // Clear countdown sebelumnya jika ada
+            // Hentikan countdown sebelumnya, jika ada
             clearInterval(countdown);
 
-            // Memulai hitungan mundur
+            // Mulai countdown
             countdown = setInterval(function() {
                 let minutes = Math.floor(time / 60);
                 let seconds = time % 60;
@@ -49,6 +50,7 @@
                 document.getElementById('timer').textContent = 
                     (minutes < 10 ? '0' : '') + minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
 
+                // Jika waktu habis, hentikan countdown dan beri tahu pengguna
                 if (time <= 0) {
                     clearInterval(countdown);
                     alert("Waktu habis!");
