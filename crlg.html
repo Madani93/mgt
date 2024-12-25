@@ -11,7 +11,6 @@
       const searchWord = urlParams.get('q'); // Mendapatkan kata pencarian dari URL (diganti menjadi 'q')
       const owner = 'Madani93'; // Owner repository sru1
       const repo = 'sru1'; // Nama repository sru1
-      const targetRepo = 'mgt'; // Repository tempat menyimpan crlg1.json
       const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/`;
 
       if (!token || !searchWord) {
@@ -46,72 +45,20 @@
           }
         }
 
-        // Mengubah hasil menjadi JSON
-        const jsonResult = JSON.stringify(result, null, 2);
-
-        // Menyimpan JSON ke repository mgt
-        await saveResultToRepo(token, jsonResult, targetRepo);
+        // Menampilkan hasil pencarian dalam bentuk JSON di halaman
+        const resultContainer = document.getElementById('result');
+        resultContainer.textContent = JSON.stringify(result, null, 2);
 
       } catch (error) {
         console.error('Error:', error);
         alert('Terjadi kesalahan saat mencari.');
       }
     }
-
-    async function saveResultToRepo(token, jsonContent, repo) {
-      const apiUrl = `https://api.github.com/repos/Madani93/${repo}/contents/crlg1.json`;
-      const message = 'Menambahkan hasil pencarian';
-
-      try {
-        // Mengecek apakah file crlg1.json sudah ada
-        const getFileResponse = await fetch(apiUrl, {
-          headers: {
-            'Authorization': `token ${token}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-
-        let contentData = {};
-        if (getFileResponse.ok) {
-          contentData = await getFileResponse.json();
-        }
-
-        // Encode konten dalam base64
-        const encodedContent = btoa(jsonContent);
-
-        // Membuat atau mengupdate file crlg1.json
-        const method = contentData.sha ? 'PUT' : 'PUT'; // PUT untuk update atau buat baru
-        const body = JSON.stringify({
-          message: message,
-          content: encodedContent,
-          sha: contentData.sha || null
-        });
-
-        const saveResponse = await fetch(apiUrl, {
-          method: method,
-          headers: {
-            'Authorization': `token ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: body
-        });
-
-        if (saveResponse.ok) {
-          alert('Hasil pencarian telah disimpan ke crlg1.json di repo mgt');
-          // Mengalihkan ke path file crlg1.json setelah berhasil menyimpan
-          window.location.href = `https://github.com/Madani93/${repo}/blob/main/crlg1.json`;
-        } else {
-          throw new Error('Gagal menyimpan file ke repository');
-        }
-
-      } catch (error) {
-        console.error('Error saving to GitHub:', error);
-        alert('Gagal menyimpan hasil pencarian ke repository.');
-      }
-    }
   </script>
 </head>
 <body>
+  <h2>Hasil Pencarian:</h2>
+  <pre id="result">Menunggu pencarian...</pre>
   <button onclick="searchInRepo()">Cari Kata</button>
 </body>
 </html>
