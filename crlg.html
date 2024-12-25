@@ -66,7 +66,7 @@
 
     // Fungsi untuk mencari kata dalam objek JSON
     function searchInJson(obj, searchWord) {
-      let result = null;
+      let result = [];
 
       // Cek apakah obj adalah objek atau array
       if (typeof obj === 'object') {
@@ -74,18 +74,20 @@
           if (obj.hasOwnProperty(key)) {
             const value = obj[key];
             if (typeof value === 'string' && value.includes(searchWord)) {
-              result = { [key]: value }; // Menyimpan kolom yang mengandung kata pencarian
+              // Menyimpan kolom yang mengandung kata pencarian
+              result.push({ [key]: value });
             } else if (typeof value === 'object') {
+              // Rekursif mencari dalam objek yang lebih dalam
               const nestedResult = searchInJson(value, searchWord);
-              if (nestedResult) {
-                result = { [key]: nestedResult };
+              if (nestedResult && nestedResult.length > 0) {
+                result.push({ [key]: nestedResult });
               }
             }
           }
         }
       }
 
-      return result;
+      return result.length > 0 ? result : null;
     }
   </script>
 </head>
