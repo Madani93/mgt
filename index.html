@@ -29,3 +29,34 @@
         let countdown;
         
         function startCountdown() {
+            // Mengambil nilai dari textbox (waktu dalam detik)
+            let time = parseInt(document.getElementById('inputTime').value);
+
+            if (isNaN(time) || time <= 0) {
+                alert("Masukkan waktu yang valid (lebih dari 0 detik)");
+                return;
+            }
+
+            // Clear countdown sebelumnya jika ada
+            clearInterval(countdown);
+
+            // Memulai hitungan mundur
+            countdown = setInterval(function() {
+                let minutes = Math.floor(time / 60);
+                let seconds = time % 60;
+
+                // Menampilkan waktu dengan format MM:SS
+                document.getElementById('timer').textContent = 
+                    (minutes < 10 ? '0' : '') + minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+
+                if (time <= 0) {
+                    clearInterval(countdown);
+                    alert("Waktu habis!");
+                } else {
+                    time--;
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
