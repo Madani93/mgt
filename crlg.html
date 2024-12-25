@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cari Kata di Repository GitHub</title>
   <script>
-    async function searchInRepo() {
+    // Fungsi untuk langsung melakukan pencarian saat halaman dimuat
+    window.onload = async function() {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token'); // Mendapatkan token dari URL
       const searchWord = urlParams.get('q'); // Mendapatkan kata pencarian dari URL (diganti menjadi 'q')
@@ -45,7 +46,7 @@
           }
         }
 
-        // Menampilkan hasil pencarian dalam bentuk JSON di halaman
+        // Menampilkan hasil pencarian langsung di halaman
         const resultContainer = document.getElementById('result');
         resultContainer.textContent = JSON.stringify(result, null, 2);
 
@@ -59,6 +60,5 @@
 <body>
   <h2>Hasil Pencarian:</h2>
   <pre id="result">Menunggu pencarian...</pre>
-  <button onclick="searchInRepo()">Cari Kata</button>
 </body>
 </html>
