@@ -22,6 +22,7 @@
       const result = [];
 
       try {
+        // Fetch data from GitHub repository
         const response = await fetch(apiUrl, {
           headers: {
             'Authorization': `token ${token}`,
@@ -29,17 +30,21 @@
           }
         });
 
+        console.log('GitHub API Response:', response);
+
         if (!response.ok) {
-          throw new Error('Gagal mengambil data dari GitHub');
+          throw new Error('Gagal mengambil data dari GitHub. Status: ' + response.status);
         }
 
         const files = await response.json();
+        console.log('Files in Repo:', files);
 
         // Periksa setiap file dalam repository
         for (const file of files) {
           if (file.type === 'file' && file.name !== 'index') {
             const fileResponse = await fetch(file.download_url);
             const fileContent = await fileResponse.json(); // Parsing isi file sebagai JSON
+            console.log('File content:', fileContent);
 
             // Cari kata pencarian dalam setiap objek JSON
             const searchResult = searchInJson(fileContent, searchWord);
@@ -56,11 +61,15 @@
 
         // Menampilkan hasil pencarian langsung di halaman
         const resultContainer = document.getElementById('result');
-        resultContainer.textContent = JSON.stringify(result, null, 2);
+        if (result.length > 0) {
+          resultContainer.textContent = JSON.stringify(result, null, 2);
+        } else {
+          resultContainer.textContent = 'Tidak ditemukan hasil untuk pencarian: "' + searchWord + '"';
+        }
 
       } catch (error) {
         console.error('Error:', error);
-        alert('Terjadi kesalahan saat mencari.');
+        alert('Terjadi kesalahan saat mencari: ' + error.message);
       }
     }
 
