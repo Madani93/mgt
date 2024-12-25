@@ -12,7 +12,7 @@
       const owner = 'Madani93'; // Owner repository sru1
       const repo = 'sru1'; // Nama repository sru1
       const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/`;
-      
+
       // Jika token atau kata pencarian tidak ada di URL, tampilkan peringatan
       if (!token || !searchWord) {
         alert('Token dan kata pencarian (q) harus ada di URL sebagai query parameter.');
@@ -69,24 +69,38 @@
       }
     }
 
-    // Fungsi untuk mencari kata dalam objek JSON
-    function searchInJson(obj, searchWord) {
+    // Fungsi untuk mencari kata dalam array objek JSON
+    function searchInJson(arr, searchWord) {
       let result = [];
 
-      // Cek apakah obj adalah objek atau array
+      // Periksa apakah arr adalah array
+      if (Array.isArray(arr)) {
+        for (let i = 0; i < arr.length; i++) {
+          const obj = arr[i];
+
+          // Cari kata dalam setiap kolom (key) di objek
+          const searchResult = searchInObject(obj, searchWord);
+
+          if (searchResult) {
+            result.push({ [i]: searchResult }); // Simpan hasil sesuai indeks objek dalam array
+          }
+        }
+      }
+
+      return result.length > 0 ? result : null;
+    }
+
+    // Fungsi untuk mencari kata dalam objek
+    function searchInObject(obj, searchWord) {
+      let result = [];
+
       if (typeof obj === 'object') {
         for (let key in obj) {
           if (obj.hasOwnProperty(key)) {
             const value = obj[key];
             if (typeof value === 'string' && value.includes(searchWord)) {
-              // Jika kata pencarian ditemukan, simpan seluruh objek pada kolom tersebut
-              result.push({ [key]: obj });
-            } else if (typeof value === 'object') {
-              // Rekursif mencari dalam objek yang lebih dalam
-              const nestedResult = searchInJson(value, searchWord);
-              if (nestedResult && nestedResult.length > 0) {
-                result.push({ [key]: nestedResult });
-              }
+              // Jika kata pencarian ditemukan, simpan objek terkait
+              result.push({ [key]: value });
             }
           }
         }
