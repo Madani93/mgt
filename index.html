@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit GitHub File</title>
+    <title>Edit File Content</title>
 </head>
 <body>
-    <h1>Edit File on GitHub</h1>
-    <textarea id="fileContent" rows="10" cols="50" placeholder="Enter new content for the file"></textarea><br>
+    <h1>Edit File Content</h1>
+    <textarea id="fileContent" rows="10" cols="50" placeholder="Enter new content"></textarea><br>
     <button onclick="updateFile()">Update File</button>
     <p id="statusMessage"></p>
 
@@ -30,7 +30,7 @@
             }
 
             try {
-                // Get the SHA of the existing file
+                // Fetch existing file to get SHA
                 const shaResponse = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`, {
                     method: 'GET',
                     headers: {
@@ -44,7 +44,7 @@
 
                 const shaData = await shaResponse.json();
                 const sha = shaData.sha;
-                const encodedContent = btoa(fileContent); // Encode file content to Base64
+                const encodedContent = btoa(fileContent); // Encode new content to Base64
 
                 // Update the file
                 const updateResponse = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`, {
@@ -54,7 +54,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        message: "Update file via GitHub Pages",
+                        message: "Update file content",
                         content: encodedContent,
                         sha: sha
                     })
