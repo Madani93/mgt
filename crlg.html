@@ -3,52 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search GitHub Repo</title>
+    <title>Cari Kata di Repositori GitHub</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        li {
+            margin: 5px 0;
+        }
+        a {
+            color: #1a0dab;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <h1>Search GitHub Repo</h1>
-    <p>Enter a query and token in the URL to search for a term in the repository:</p>
-    <p><strong>URL format:</strong> `crlg.html?q=your_query&token=your_token`</p>
-    
-    <div id="results"></div>
+    <h1>Cari Kata di Repositori GitHub</h1>
+    <input type="text" id="search-query" placeholder="Masukkan kata yang ingin dicari" />
+    <button id="search-btn">Cari</button>
+    <ul id="results"></ul>
 
     <script>
-        const queryParams = new URLSearchParams(window.location.search);
-        const query = queryParams.get('q');
-        const token = queryParams.get('token');
+        $(document).ready(function() {
+            const repoOwner = 'Mgt93'; // Nama pengguna GitHub
+            const repoName = 'sru1'; // Nama repositori target
 
-        if (!query || !token) {
-            document.getElementById('results').innerHTML = 'Please provide both query and token in the URL.';
-        } else {
-            const repoOwner = 'Madani93';
-            const repoName = 'sru1';
-            const apiUrl = `https://api.github.com/search/code?q=${query}+repo:${repoOwner}/${repoName}&access_token=${token}`;
+            // Ambil token dan query dari URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token'); // Ambil token dari URL
+            const query = urlParams.get('q'); // Ambil kata pencarian (query) dari URL
 
-            async function searchRepo() {
-                try {
-                    const response = await fetch(apiUrl);
-                    const data = await response.json();
-                    
-                    if (data.items && data.items.length > 0) {
-                        let resultsHtml = '<h3>Results:</h3>';
-                        data.items.forEach(item => {
-                            resultsHtml += `
-                                <div>
-                                    <strong>File:</strong> <a href="${item.html_url}" target="_blank">${item.name}</a>
-                                </div>
-                            `;
-                        });
-                        document.getElementById('results').innerHTML = resultsHtml;
-                    } else {
-                        document.getElementById('results').innerHTML = 'No results found.';
-                    }
-                } catch (error) {
-                    document.getElementById('results').innerHTML = 'Error fetching data from GitHub API.';
-                }
+            // Jika query ditemukan di URL, isi input pencarian dengan nilai tersebut
+            if (query) {
+                $('#search-query').val(query);
             }
 
-            searchRepo();
-        }
+            // Jika tombol "Cari" ditekan
+            $('#search-btn').on('click', function() {
+                const searchQuery = $('#search-query').val();
+                if (searchQuery) {
+                    searchGitHubRepo(repoOwner, repoName, searchQuery, token);
+                }
+            });
+
+            // Fungsi untuk mencari kata di repositori
+            function searchGitHubRepo(owner, repo, query, token) {
+                const apiUrl = `https://api.github.com/search/code?q=${query}+in:file+repo:${owner}/${repo}`;
+
+                // Tambahkan header untuk otentikasi menggunakan token
+                const headers = token ? { 'Authorization': 'token ' + token } : {};
+
+                $.get({
+                    url: apiUrl,
+                    headers: headers,
+                    success: function(data) {
+                        $('#results').empty(); // Kosongkan hasil pencarian sebelumnya
+
+                        if (data.items.length === 0) {
+                            $('#results').append('<li>Tidak ada hasil ditemukan.</li>');
+                        } else {
+                            data.items.forEach(item => {
+                                const result = `
+                                    <li>
+                                        <a href="${item.html_url}" target="_blank">
+                                            ${item.name} (in ${item.repository.name}) - ${item.path}
+                                        </a>
+                                    </li>
+                                `;
+                                $('#results').append(result);
+                            });
+                        }
+                    },
+                    error: function() {
+                        $('#results').append('<li>Terjadi kesalahan saat mencari di repositori.</li>');
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
