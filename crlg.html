@@ -55,7 +55,7 @@
 
             if (searchResult) {
               result.push({
-                file: file.path,
+                file: file.name,
                 found: searchResult,
               });
             }
@@ -77,31 +77,26 @@
       }
     };
 
-    function searchInJson(arr, searchWord) {
-      let result = [];
-
-      if (Array.isArray(arr)) {
-        for (let i = 0; i < arr.length; i++) {
-          const obj = arr[i];
-          const searchResult = searchInObject(obj, searchWord);
-
-          if (searchResult) {
-            result.push({ [i]: searchResult });
-          }
-        }
-      }
-
-      return result.length > 0 ? result : null;
-    }
-
-    function searchInObject(obj, searchWord) {
+    function searchInJson(obj, searchWord) {
       let result = [];
 
       if (typeof obj === "object") {
         for (let key in obj) {
           if (obj.hasOwnProperty(key)) {
             const value = obj[key];
-            if (typeof value === "string" && value.includes(searchWord)) {
+
+            // Jika value adalah objek, lanjutkan pencarian
+            if (typeof value === "object") {
+              const nestedResult = searchInJson(value, searchWord);
+              if (nestedResult) {
+                result.push({ [key]: nestedResult });
+              }
+            }
+            // Jika value mengandung kata pencarian
+            else if (
+              typeof value === "string" &&
+              value.toLowerCase().includes(searchWord.toLowerCase())
+            ) {
               result.push({ [key]: value });
             }
           }
