@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cari Kata di Repository GitHub</title>
   <script>
+    // Fungsi untuk langsung melakukan pencarian saat halaman dimuat
     window.onload = async function() {
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token'); // Mengambil token dari URL
-      const searchWord = urlParams.get('q'); // Mengambil kata pencarian dari URL (diganti menjadi 'q')
+      const token = urlParams.get('token'); // Mendapatkan token dari URL
+      const searchWord = urlParams.get('q'); // Mendapatkan kata pencarian dari URL (diganti menjadi 'q')
       const owner = 'Madani93'; // Owner repository sru1
       const repo = 'sru1'; // Nama repository sru1
       const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/`;
 
-      // Jika token atau kata pencarian tidak ada di URL, tampilkan peringatan
       if (!token || !searchWord) {
         alert('Token dan kata pencarian (q) harus ada di URL sebagai query parameter.');
         return;
@@ -34,14 +34,12 @@
         }
 
         const files = await response.json();
-
-        // Periksa setiap file dalam repository
+        
         for (const file of files) {
           if (file.type === 'file') {
             const fileResponse = await fetch(file.download_url);
             const fileContent = await fileResponse.text();
 
-            // Jika kata pencarian ditemukan dalam file, simpan hasilnya
             if (fileContent.includes(searchWord)) {
               result.push({ file: file.path, found: true });
             }
