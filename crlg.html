@@ -3,86 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cari Kata di Repository GitHub</title>
+  <title>Pencarian di GitHub Repo</title>
+</head>
+<body>
+  <pre id="result">Memuat hasil...</pre>
   <script>
-    window.onload = async function() {
+    window.onload = async function () {
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token'); // Mengambil token dari URL
-      const searchWord = urlParams.get('q'); // Mengambil kata pencarian dari URL (diganti menjadi 'q')
-      const owner = 'Madani93'; // Owner repository sru1
-      const repo = 'sru1'; // Nama repository sru1
+      const token = urlParams.get("token");
+      const searchWord = urlParams.get("q");
+      const owner = "Madani93";
+      const repo = "sru1";
       const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/`;
 
-      // Jika token atau kata pencarian tidak ada di URL, tampilkan peringatan
       if (!token || !searchWord) {
-        alert('Token dan kata pencarian (q) harus ada di URL sebagai query parameter.');
+        document.getElementById("result").textContent =
+          "Token dan kata pencarian (q) harus ada di URL sebagai query parameter.";
         return;
       }
 
       const result = [];
 
       try {
-        // Mengambil daftar file dari repositori GitHub
         const response = await fetch(apiUrl, {
           headers: {
-            'Authorization': `token ${token}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
+            Authorization: `token ${token}`,
+            Accept: "application/vnd.github.v3+json",
+          },
         });
 
         if (!response.ok) {
-          throw new Error('Gagal mengambil data dari GitHub. Status: ' + response.status);
+          throw new Error("Gagal mengambil data dari GitHub. Status: " + response.status);
         }
 
         const files = await response.json();
 
-        // Memeriksa setiap file di dalam repositori
         for (const file of files) {
-          if (file.type === 'file' && file.name !== 'index') { // Menghindari file 'index'
-            const fileResponse = await fetch(file.download_url);
-            const fileContent = await fileResponse.json(); // Mengambil dan memparsing konten JSON file
-          
-            // Mencari kata pencarian dalam konten JSON file
+          // Lewati file yang tidak berbentuk JSON, seperti 'index'
+          if (file.name === "index" || !file.name.endsWith(".json")) {
+            continue;
+          }
+
+          const fileResponse = await fetch(file.download_url);
+          const fileText = await fileResponse.text(); // Ambil konten file sebagai teks
+
+          try {
+            const fileContent = JSON.parse(fileText); // Parse teks ke JSON
+
+            // Mencari kata pencarian dalam konten JSON
             const searchResult = searchInJson(fileContent, searchWord);
 
             if (searchResult) {
-              // Jika ditemukan, simpan hasilnya
               result.push({
                 file: file.path,
-                found: searchResult
+                found: searchResult,
               });
             }
+          } catch (error) {
+            console.warn(`File ${file.name} bukan JSON valid:`, error.message);
           }
         }
 
-        // Menampilkan hasil pencarian langsung di halaman
-        const resultContainer = document.getElementById('result');
+        const resultContainer = document.getElementById("result");
         if (result.length > 0) {
-          resultContainer.innerHTML = JSON.stringify(result, null, 2); // Menampilkan hasil dalam format JSON
+          resultContainer.textContent = JSON.stringify(result, null, 2);
         } else {
           resultContainer.textContent = `Tidak ditemukan hasil untuk pencarian: "${searchWord}"`;
         }
-
       } catch (error) {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan saat mencari: ' + error.message);
+        console.error("Error:", error);
+        document.getElementById("result").textContent =
+          "Terjadi kesalahan saat mencari: " + error.message;
       }
-    }
+    };
 
-    // Fungsi untuk mencari kata dalam array objek JSON
     function searchInJson(arr, searchWord) {
       let result = [];
 
-      // Periksa apakah arr adalah array
       if (Array.isArray(arr)) {
         for (let i = 0; i < arr.length; i++) {
           const obj = arr[i];
-
-          // Cari kata dalam setiap kolom (key) di objek
           const searchResult = searchInObject(obj, searchWord);
 
           if (searchResult) {
-            result.push({ [i]: searchResult }); // Simpan hasil sesuai indeks objek dalam array
+            result.push({ [i]: searchResult });
           }
         }
       }
@@ -90,16 +94,14 @@
       return result.length > 0 ? result : null;
     }
 
-    // Fungsi untuk mencari kata dalam objek
     function searchInObject(obj, searchWord) {
       let result = [];
 
-      if (typeof obj === 'object') {
+      if (typeof obj === "object") {
         for (let key in obj) {
           if (obj.hasOwnProperty(key)) {
             const value = obj[key];
-            if (typeof value === 'string' && value.includes(searchWord)) {
-              // Jika kata pencarian ditemukan, simpan objek terkait
+            if (typeof value === "string" && value.includes(searchWord)) {
               result.push({ [key]: value });
             }
           }
@@ -109,9 +111,5 @@
       return result.length > 0 ? result : null;
     }
   </script>
-</head>
-<body>
-  <h2>Hasil Pencarian:</h2>
-  <pre id="result"></pre>
 </body>
 </html>
