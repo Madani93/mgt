@@ -5,21 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cari Kata di Repository GitHub</title>
   <script>
-    async function searchInRepo() {
+    window.onload = async function() {
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token'); // Mendapatkan token dari URL
-      const searchWord = urlParams.get('q'); // Mendapatkan kata pencarian dari URL (diganti menjadi 'q')
+      const token = urlParams.get('token'); // Mengambil token dari URL
+      const searchWord = urlParams.get('q'); // Mengambil kata pencarian dari URL (diganti menjadi 'q')
       const owner = 'Madani93'; // Owner repository sru1
       const repo = 'sru1'; // Nama repository sru1
       const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/`;
 
+      // Jika token atau kata pencarian tidak ada di URL, tampilkan peringatan
       if (!token || !searchWord) {
         alert('Token dan kata pencarian (q) harus ada di URL sebagai query parameter.');
         return;
       }
 
       const result = [];
-      
+
       try {
         const response = await fetch(apiUrl, {
           headers: {
@@ -33,24 +34,24 @@
         }
 
         const files = await response.json();
-        
+
+        // Periksa setiap file dalam repository
         for (const file of files) {
           if (file.type === 'file') {
             const fileResponse = await fetch(file.download_url);
             const fileContent = await fileResponse.text();
 
+            // Jika kata pencarian ditemukan dalam file, simpan hasilnya
             if (fileContent.includes(searchWord)) {
               result.push({ file: file.path, found: true });
             }
           }
         }
 
-        // Mengubah hasil menjadi JSON
-        const jsonResult = JSON.stringify(result, null, 2);
-        
-        // Output JSON dalam bentuk baru
-        const jsonOutput = `data:application/json;charset=utf-8,${encodeURIComponent(jsonResult)}`;
-        window.location.href = jsonOutput; // Mengarahkan ke URL dengan output JSON
+        // Menampilkan hasil pencarian langsung di halaman
+        const resultContainer = document.getElementById('result');
+        resultContainer.textContent = JSON.stringify(result, null, 2);
+
       } catch (error) {
         console.error('Error:', error);
         alert('Terjadi kesalahan saat mencari.');
@@ -59,12 +60,6 @@
   </script>
 </head>
 <body>
-  <h1>Cari Kata di Repository GitHub</h1>
-  <p>Masukkan token dan kata pencarian melalui URL sebagai query parameter:</p>
-  <pre>Contoh URL: https://Madani93.github.io/mgt/crlg.html?token=YOUR_GITHUB_TOKEN&q=kata_yang_dicari</pre>
-  
-  <button onclick="searchInRepo()">Cari Kata</button>
-
   <h2>Hasil Pencarian:</h2>
   <pre id="result"></pre>
 </body>
