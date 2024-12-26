@@ -1,124 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pencarian Kata dalam Repo GitHub</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cari Kata di Repository GitHub</title>
+  <script>
+    async function searchInRepo() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token'); // Mendapatkan token dari URL
+      const searchWord = urlParams.get('q'); // Mendapatkan kata pencarian dari URL (diganti menjadi 'q')
+      const owner = 'Madani93'; // Owner repository sru1
+      const repo = 'sru1'; // Nama repository sru1
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/`;
+
+      if (!token || !searchWord) {
+        alert('Token dan kata pencarian (q) harus ada di URL sebagai query parameter.');
+        return;
+      }
+
+      const result = [];
+      
+      try {
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Authorization': `token ${token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Gagal mengambil data dari GitHub');
         }
-        #results {
-            margin-top: 20px;
+
+        const files = await response.json();
+        
+        for (const file of files) {
+          if (file.type === 'file') {
+            const fileResponse = await fetch(file.download_url);
+            const fileContent = await fileResponse.text();
+
+            if (fileContent.includes(searchWord)) {
+              result.push({ file: file.path, found: true });
+            }
+          }
         }
-        li {
-            margin: 5px 0;
-        }
-    </style>
+
+        // Mengubah hasil menjadi JSON
+        const jsonResult = JSON.stringify(result, null, 2);
+        
+        // Output JSON dalam bentuk baru
+        const jsonOutput = `data:application/json;charset=utf-8,${encodeURIComponent(jsonResult)}`;
+        window.location.href = jsonOutput; // Mengarahkan ke URL dengan output JSON
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat mencari.');
+      }
+    }
+  </script>
 </head>
 <body>
-    <h1>Hasil Pencarian dalam File JSON di Repo GitHub</h1>
-    <ul id="results"></ul>
+  <h1>Cari Kata di Repository GitHub</h1>
+  <p>Masukkan token dan kata pencarian melalui URL sebagai query parameter:</p>
+  <pre>Contoh URL: https://Madani93.github.io/mgt/crlg.html?token=YOUR_GITHUB_TOKEN&q=kata_yang_dicari</pre>
+  
+  <button onclick="searchInRepo()">Cari Kata</button>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Ambil query dan token dari URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const query = urlParams.get('q'); // Kata yang dicari
-            const token = urlParams.get('token'); // Token untuk autentikasi
-
-            // Jika query atau token tidak ada di URL
-            if (!query || !token) {
-                document.getElementById('results').innerHTML = 'Parameter pencarian (q) atau token tidak ditemukan di URL.';
-                return;
-            }
-
-            // GitHub API URL untuk repository sru1
-            const repoUrl = 'https://api.github.com/repos/Mgt93/sru1/contents/';
-
-            // Mengambil daftar file di repo
-            fetch(repoUrl, {
-                headers: {
-                    'Authorization': `token ${token}`
-                }
-            })
-            .then(response => response.json())
-            .then(files => {
-                // Filter hanya file JSON
-                const jsonFiles = files.filter(file => file.name.endsWith('.json'));
-
-                if (jsonFiles.length === 0) {
-                    document.getElementById('results').innerHTML = 'Tidak ada file JSON ditemukan dalam repo.';
-                    return;
-                }
-
-                // Untuk setiap file JSON, periksa apakah kata ditemukan
-                let results = [];
-                let filesChecked = 0;
-
-                jsonFiles.forEach(file => {
-                    // Ambil konten file JSON
-                    fetch(file.download_url)
-                        .then(response => response.json())
-                        .then(data => {
-                            // Periksa apakah kata ditemukan dalam data JSON
-                            if (searchInJSON(data, query)) {
-                                results.push(`Ditemukan dalam file: ${file.name}`);
-                            }
-
-                            filesChecked++;
-                            if (filesChecked === jsonFiles.length) {
-                                displayResults(results);
-                            }
-                        })
-                        .catch(error => {
-                            console.error(error);
-                            filesChecked++;
-                            if (filesChecked === jsonFiles.length) {
-                                displayResults(results);
-                            }
-                        });
-                });
-            })
-            .catch(error => {
-                document.getElementById('results').innerHTML = 'Terjadi kesalahan saat mengambil file dari GitHub.';
-                console.error(error);
-            });
-
-            // Fungsi untuk mencari kata dalam file JSON
-            function searchInJSON(data, query) {
-                let found = false;
-
-                // Iterasi setiap objek dalam data
-                data.forEach(item => {
-                    // Cek apakah salah satu value dalam objek mengandung kata pencarian
-                    for (const key in item) {
-                        if (item[key].toString().includes(query)) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (found) return;
-                });
-
-                return found;
-            }
-
-            // Fungsi untuk menampilkan hasil pencarian
-            function displayResults(results) {
-                const resultsList = document.getElementById('results');
-                if (results.length > 0) {
-                    results.forEach(result => {
-                        const li = document.createElement('li');
-                        li.textContent = result;
-                        resultsList.appendChild(li);
-                    });
-                } else {
-                    resultsList.innerHTML = 'Tidak ada hasil ditemukan.';
-                }
-            }
-        });
-    </script>
+  <h2>Hasil Pencarian:</h2>
+  <pre id="result"></pre>
 </body>
 </html>
