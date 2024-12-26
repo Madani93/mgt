@@ -40,8 +40,8 @@
             const query = urlParams.get('q'); // Ambil kata pencarian (query) dari URL
 
             // Jika query tidak ada di URL, beri tahu pengguna dan berhenti
-            if (!query) {
-                $('#results').append('<li>Parameter pencarian (q) tidak ditemukan di URL.</li>');
+            if (!query || !token) {
+                $('#results').append('<li>Parameter pencarian (q) atau token tidak ditemukan di URL.</li>');
                 return;
             }
 
@@ -52,8 +52,10 @@
             function searchGitHubRepo(owner, repo, query, token) {
                 const apiUrl = `https://api.github.com/search/code?q=${query}+in:file+repo:${owner}/${repo}`;
 
-                // Tambahkan header untuk otentikasi menggunakan token jika tersedia
-                const headers = token ? { 'Authorization': 'token ' + token } : {};
+                // Tambahkan header untuk otentikasi menggunakan token yang diberikan
+                const headers = {
+                    'Authorization': 'token ' + token
+                };
 
                 console.log("Mencari dengan URL: " + apiUrl); // Debugging URL
 
