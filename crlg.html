@@ -43,7 +43,8 @@
         } else {
             const repoOwner = 'Madani93';
             const repoName = 'sru1';
-            const apiUrl = `https://api.github.com/search/code?q=${query}+repo:${repoOwner}/${repoName}&access_token=${token}`;
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+            const apiUrl = `${proxyUrl}https://api.github.com/search/code?q=${query}+repo:${repoOwner}/${repoName}&access_token=${token}`;
 
             // Function to fetch search results from GitHub API
             async function searchRepo() {
@@ -51,22 +52,26 @@
                     const response = await fetch(apiUrl);
                     const data = await response.json();
 
-                    if (data.items && data.items.length > 0) {
-                        const resultsDiv = document.getElementById('results');
-                        resultsDiv.innerHTML = ''; // Clear previous results
+                    if (response.ok) {
+                        if (data.items && data.items.length > 0) {
+                            const resultsDiv = document.getElementById('results');
+                            resultsDiv.innerHTML = ''; // Clear previous results
 
-                        data.items.forEach(item => {
-                            const resultItem = document.createElement('div');
-                            resultItem.classList.add('result-item');
-                            resultItem.innerHTML = `
-                                <strong>File:</strong> <a href="${item.html_url}" target="_blank">${item.name}</a>
-                                <br><strong>Line:</strong> ${item.text_matches ? item.text_matches[0].fragment : 'Not available'}
-                                <br><pre>${item.text_matches ? item.text_matches[0].fragment : 'No match found in content'}</pre>
-                            `;
-                            resultsDiv.appendChild(resultItem);
-                        });
+                            data.items.forEach(item => {
+                                const resultItem = document.createElement('div');
+                                resultItem.classList.add('result-item');
+                                resultItem.innerHTML = `
+                                    <strong>File:</strong> <a href="${item.html_url}" target="_blank">${item.name}</a>
+                                    <br><strong>Line:</strong> ${item.text_matches ? item.text_matches[0].fragment : 'Not available'}
+                                    <br><pre>${item.text_matches ? item.text_matches[0].fragment : 'No match found in content'}</pre>
+                                `;
+                                resultsDiv.appendChild(resultItem);
+                            });
+                        } else {
+                            document.getElementById('results').innerHTML = 'No results found.';
+                        }
                     } else {
-                        document.getElementById('results').innerHTML = 'No results found.';
+                        document.getElementById('results').innerHTML = `Error: ${data.message}`;
                     }
                 } catch (error) {
                     document.getElementById('results').innerHTML = 'Error fetching data from GitHub API.';
