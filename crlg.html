@@ -41,14 +41,14 @@
             const fileContent = await fileResponse.text();
 
             if (fileContent.includes(searchWord)) {
-              result.push({ file: file.path, found: true });
+              result.push(file.path);  // Menyimpan hanya nama file yang ditemukan
             }
           }
         }
 
         // Menampilkan hasil pencarian langsung di halaman
         const resultContainer = document.getElementById('result');
-        resultContainer.textContent = JSON.stringify(result, null, 2);
+        resultContainer.textContent = result.length > 0 ? result.join('\n') : 'Tidak ada file yang ditemukan.'; // Menampilkan nama file
 
       } catch (error) {
         console.error('Error:', error);
