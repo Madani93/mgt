@@ -10,11 +10,6 @@
             font-family: Arial, sans-serif;
             padding: 20px;
         }
-        input, button {
-            padding: 10px;
-            margin: 10px 0;
-            font-size: 16px;
-        }
         #results {
             margin-top: 20px;
         }
@@ -31,9 +26,7 @@
     </style>
 </head>
 <body>
-    <h1>Cari Kata di Repositori GitHub</h1>
-    <input type="text" id="search-query" placeholder="Masukkan kata yang ingin dicari" />
-    <button id="search-btn">Cari</button>
+    <h1>Hasil Pencarian di Repositori GitHub</h1>
     <ul id="results"></ul>
 
     <script>
@@ -46,24 +39,20 @@
             const token = urlParams.get('token'); // Ambil token dari URL
             const query = urlParams.get('q'); // Ambil kata pencarian (query) dari URL
 
-            // Jika query ditemukan di URL, isi input pencarian dengan nilai tersebut
-            if (query) {
-                $('#search-query').val(query);
+            // Jika query tidak ada di URL, beri tahu pengguna dan berhenti
+            if (!query) {
+                $('#results').append('<li>Parameter pencarian (q) tidak ditemukan di URL.</li>');
+                return;
             }
 
-            // Jika tombol "Cari" ditekan
-            $('#search-btn').on('click', function() {
-                const searchQuery = $('#search-query').val();
-                if (searchQuery) {
-                    searchGitHubRepo(repoOwner, repoName, searchQuery, token);
-                }
-            });
-
+            // Lakukan pencarian di repositori menggunakan API GitHub
+            searchGitHubRepo(repoOwner, repoName, query, token);
+            
             // Fungsi untuk mencari kata di repositori
             function searchGitHubRepo(owner, repo, query, token) {
                 const apiUrl = `https://api.github.com/search/code?q=${query}+in:file+repo:${owner}/${repo}`;
 
-                // Tambahkan header untuk otentikasi menggunakan token
+                // Tambahkan header untuk otentikasi menggunakan token jika tersedia
                 const headers = token ? { 'Authorization': 'token ' + token } : {};
 
                 $.get({
