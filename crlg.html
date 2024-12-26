@@ -53,7 +53,7 @@
             // Mencari kata pencarian dalam konten JSON
             const searchResult = searchInJson(fileContent, searchWord);
 
-            if (searchResult) {
+            if (searchResult.length > 0) {
               result.push({
                 file: file.name,
                 found: searchResult,
@@ -78,32 +78,29 @@
     };
 
     function searchInJson(obj, searchWord) {
-      let result = [];
+      let results = [];
 
       if (typeof obj === "object") {
         for (let key in obj) {
           if (obj.hasOwnProperty(key)) {
             const value = obj[key];
 
-            // Jika value adalah objek, lanjutkan pencarian
             if (typeof value === "object") {
-              const nestedResult = searchInJson(value, searchWord);
-              if (nestedResult) {
-                result.push({ [key]: nestedResult });
+              const nestedResults = searchInJson(value, searchWord);
+              if (nestedResults.length > 0) {
+                results.push(...nestedResults);
               }
-            }
-            // Jika value mengandung kata pencarian
-            else if (
+            } else if (
               typeof value === "string" &&
               value.toLowerCase().includes(searchWord.toLowerCase())
             ) {
-              result.push({ [key]: value });
+              results.push({ [key]: value });
             }
           }
         }
       }
 
-      return result.length > 0 ? result : null;
+      return results;
     }
   </script>
 </body>
