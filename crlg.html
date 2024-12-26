@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cari Kata di Repositori GitHub</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Pencarian Kata dalam Repo GitHub</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,76 +15,108 @@
         li {
             margin: 5px 0;
         }
-        a {
-            color: #1a0dab;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
-    <h1>Hasil Pencarian dalam File di Repositori GitHub</h1>
+    <h1>Hasil Pencarian dalam File JSON di Repo GitHub</h1>
     <ul id="results"></ul>
 
     <script>
-        $(document).ready(function() {
-            const repoOwner = 'Mgt93'; // Nama pengguna GitHub
-            const repoName = 'sru1'; // Nama repositori target
-
-            // Ambil token dan query dari URL
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ambil query dan token dari URL
             const urlParams = new URLSearchParams(window.location.search);
-            const token = urlParams.get('token'); // Ambil token dari URL
-            const query = urlParams.get('q'); // Ambil kata pencarian (query) dari URL
+            const query = urlParams.get('q'); // Kata yang dicari
+            const token = urlParams.get('token'); // Token untuk autentikasi
 
-            // Jika query tidak ada di URL, beri tahu pengguna dan berhenti
+            // Jika query atau token tidak ada di URL
             if (!query || !token) {
-                $('#results').append('<li>Parameter pencarian (q) atau token tidak ditemukan di URL.</li>');
+                document.getElementById('results').innerHTML = 'Parameter pencarian (q) atau token tidak ditemukan di URL.';
                 return;
             }
 
-            // Lakukan pencarian di repositori menggunakan API GitHub
-            searchGitHubRepo(repoOwner, repoName, query, token);
-            
-            // Fungsi untuk mencari kata dalam file di repositori
-            function searchGitHubRepo(owner, repo, query, token) {
-                const apiUrl = `https://api.github.com/search/code?q=${query}+in:file+repo:${owner}/${repo}`;
+            // GitHub API URL untuk repository sru1
+            const repoUrl = 'https://api.github.com/repos/Mgt93/sru1/contents/';
 
-                // Tambahkan header untuk otentikasi menggunakan token yang diberikan
-                const headers = {
-                    'Authorization': 'token ' + token
-                };
+            // Mengambil daftar file di repo
+            fetch(repoUrl, {
+                headers: {
+                    'Authorization': `token ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(files => {
+                // Filter hanya file JSON
+                const jsonFiles = files.filter(file => file.name.endsWith('.json'));
 
-                console.log("Mencari dengan URL: " + apiUrl); // Debugging URL
+                if (jsonFiles.length === 0) {
+                    document.getElementById('results').innerHTML = 'Tidak ada file JSON ditemukan dalam repo.';
+                    return;
+                }
 
-                $.get({
-                    url: apiUrl,
-                    headers: headers,
-                    success: function(data) {
-                        $('#results').empty(); // Kosongkan hasil pencarian sebelumnya
+                // Untuk setiap file JSON, periksa apakah kata ditemukan
+                let results = [];
+                let filesChecked = 0;
 
-                        if (data.items.length === 0) {
-                            $('#results').append('<li>Tidak ada hasil ditemukan.</li>');
-                        } else {
-                            data.items.forEach(item => {
-                                const result = `
-                                    <li>
-                                        <a href="${item.html_url}" target="_blank">
-                                            Ditemukan dalam file: ${item.name} - ${item.path}
-                                        </a><br>
-                                        <i>Baris: ${item.repository.name}</i>
-                                    </li>
-                                `;
-                                $('#results').append(result);
-                            });
-                        }
-                    },
-                    error: function(error) {
-                        console.error(error); // Debugging error
-                        $('#results').append('<li>Terjadi kesalahan saat mencari di repositori.</li>');
-                    }
+                jsonFiles.forEach(file => {
+                    // Ambil konten file JSON
+                    fetch(file.download_url)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Periksa apakah kata ditemukan dalam data JSON
+                            if (searchInJSON(data, query)) {
+                                results.push(`Ditemukan dalam file: ${file.name}`);
+                            }
+
+                            filesChecked++;
+                            if (filesChecked === jsonFiles.length) {
+                                displayResults(results);
+                            }
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            filesChecked++;
+                            if (filesChecked === jsonFiles.length) {
+                                displayResults(results);
+                            }
+                        });
                 });
+            })
+            .catch(error => {
+                document.getElementById('results').innerHTML = 'Terjadi kesalahan saat mengambil file dari GitHub.';
+                console.error(error);
+            });
+
+            // Fungsi untuk mencari kata dalam file JSON
+            function searchInJSON(data, query) {
+                let found = false;
+
+                // Iterasi setiap objek dalam data
+                data.forEach(item => {
+                    // Cek apakah salah satu value dalam objek mengandung kata pencarian
+                    for (const key in item) {
+                        if (item[key].toString().includes(query)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found) return;
+                });
+
+                return found;
+            }
+
+            // Fungsi untuk menampilkan hasil pencarian
+            function displayResults(results) {
+                const resultsList = document.getElementById('results');
+                if (results.length > 0) {
+                    results.forEach(result => {
+                        const li = document.createElement('li');
+                        li.textContent = result;
+                        resultsList.appendChild(li);
+                    });
+                } else {
+                    resultsList.innerHTML = 'Tidak ada hasil ditemukan.';
+                }
             }
         });
     </script>
