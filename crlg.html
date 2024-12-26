@@ -1,79 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pencarian di GitHub</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Repo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .result-item {
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .result-item pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
 </head>
 <body>
-  <script>
-    async function searchGitHubRepo() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get("token");
-      const query = urlParams.get("q");
+    <h1>Search GitHub Repo</h1>
+    <p>Enter a query and token in the URL to search for a term in the repository:</p>
+    <p><strong>URL format:</strong> `crlg.html?q=your_query&token=your_token`</p>
+    
+    <div id="results"></div>
 
-      if (!token || !query) {
-        document.body.textContent = "Token dan query harus dimasukkan melalui URL.";
-        return;
-      }
+    <script>
+        const queryParams = new URLSearchParams(window.location.search);
+        const query = queryParams.get('q');  // Query to search for
+        const token = queryParams.get('token');  // GitHub token
 
-      const repoOwner = "Madani93";
-      const repoName = "sru1";
+        if (!query || !token) {
+            document.getElementById('results').innerHTML = 'Please provide both query and token in the URL.';
+        } else {
+            const repoOwner = 'Madani93';
+            const repoName = 'sru1';
+            const apiUrl = `https://api.github.com/search/code?q=${query}+repo:${repoOwner}/${repoName}&access_token=${token}`;
 
-      try {
-        // Ambil daftar file di repo
-        const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents`, {
-          headers: { Authorization: `token ${token}` }
-        });
+            // Function to fetch search results from GitHub API
+            async function searchRepo() {
+                try {
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(`Gagal mengambil daftar file: ${response.statusText}`);
-        }
+                    if (data.items && data.items.length > 0) {
+                        const resultsDiv = document.getElementById('results');
+                        resultsDiv.innerHTML = ''; // Clear previous results
 
-        const files = await response.json();
-        const result = [];
-
-        for (const file of files) {
-          if (file.name === "index") {
-            continue; // Skip file bernama 'index'
-          }
-
-          // Ambil isi file teks
-          const fileResponse = await fetch(file.download_url, {
-            headers: { Authorization: `token ${token}` }
-          });
-
-          if (!fileResponse.ok) {
-            console.warn(`Gagal mengambil file: ${file.name}`);
-            continue;
-          }
-
-          try {
-            const fileText = await fileResponse.text();
-            const matchingLines = searchInText(fileText, query);
-
-            if (matchingLines.length > 0) {
-              result.push({ file: file.name, lines: matchingLines });
+                        data.items.forEach(item => {
+                            const resultItem = document.createElement('div');
+                            resultItem.classList.add('result-item');
+                            resultItem.innerHTML = `
+                                <strong>File:</strong> <a href="${item.html_url}" target="_blank">${item.name}</a>
+                                <br><strong>Line:</strong> ${item.text_matches ? item.text_matches[0].fragment : 'Not available'}
+                                <br><pre>${item.text_matches ? item.text_matches[0].fragment : 'No match found in content'}</pre>
+                            `;
+                            resultsDiv.appendChild(resultItem);
+                        });
+                    } else {
+                        document.getElementById('results').innerHTML = 'No results found.';
+                    }
+                } catch (error) {
+                    document.getElementById('results').innerHTML = 'Error fetching data from GitHub API.';
+                    console.error(error);
+                }
             }
-          } catch (error) {
-            console.warn(`Gagal memproses file: ${file.name}`, error.message);
-          }
+
+            // Start searching when page loads
+            searchRepo();
         }
-
-        // Tampilkan hasil
-        document.body.textContent = JSON.stringify(result, null, 2);
-      } catch (error) {
-        document.body.textContent = `Terjadi kesalahan: ${error.message}`;
-      }
-    }
-
-    // Fungsi untuk mencari kata dalam teks
-    function searchInText(text, query) {
-      const lines = text.split("\n");
-      return lines.filter(line => line.includes(query));
-    }
-
-    searchGitHubRepo();
-  </script>
+    </script>
 </body>
 </html>
