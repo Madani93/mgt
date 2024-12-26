@@ -3,105 +3,93 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pencarian di GitHub Repo</title>
+  <title>GitHub JSON Search</title>
 </head>
 <body>
-  <pre id="result">Memuat hasil...</pre>
   <script>
-    window.onload = async function () {
+    async function searchGitHubRepo() {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get("token");
-      const searchWord = urlParams.get("q");
-      const owner = "Madani93";
-      const repo = "sru1";
-      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/`;
+      const query = urlParams.get("q");
 
-      if (!token || !searchWord) {
-        document.getElementById("result").textContent =
-          "Token dan kata pencarian (q) harus ada di URL sebagai query parameter.";
+      if (!token || !query) {
+        document.body.textContent = "Token dan query harus dimasukkan melalui URL.";
         return;
       }
 
-      const result = [];
+      const repoOwner = "Madani93";
+      const repoName = "sru1";
 
       try {
-        const response = await fetch(apiUrl, {
-          headers: {
-            Authorization: `token ${token}`,
-            Accept: "application/vnd.github.v3+json",
-          },
+        // Ambil daftar file di repo
+        const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents`, {
+          headers: { Authorization: `token ${token}` }
         });
 
         if (!response.ok) {
-          throw new Error("Gagal mengambil data dari GitHub. Status: " + response.status);
+          throw new Error(`Gagal mengambil daftar file: ${response.statusText}`);
         }
 
         const files = await response.json();
+        const result = [];
 
         for (const file of files) {
-          // Lewati file yang tidak berbentuk JSON, seperti 'index'
           if (file.name === "index" || !file.name.endsWith(".json")) {
+            continue; // Skip file yang bukan JSON atau bernama 'index'
+          }
+
+          // Ambil isi file JSON
+          const fileResponse = await fetch(file.download_url, {
+            headers: { Authorization: `token ${token}` }
+          });
+
+          if (!fileResponse.ok) {
+            console.warn(`Gagal mengambil file: ${file.name}`);
             continue;
           }
 
-          const fileResponse = await fetch(file.download_url);
-          const fileText = await fileResponse.text(); // Ambil konten file sebagai teks
-
           try {
-            const fileContent = JSON.parse(fileText); // Parse teks ke JSON
+            const fileText = await fileResponse.text();
+            const fileContent = JSON.parse(fileText); // Parse JSON
+            const foundData = searchInJson(fileContent, query);
 
-            // Mencari kata pencarian dalam konten JSON
-            const searchResult = searchInJson(fileContent, searchWord);
-
-            if (searchResult.length > 0) {
-              result.push({
-                file: file.name,
-                found: searchResult,
-              });
+            if (foundData.length > 0) {
+              result.push({ file: file.name, data: foundData });
             }
           } catch (error) {
-            console.warn(`File ${file.name} bukan JSON valid:`, error.message);
+            console.warn(`Gagal memproses file JSON: ${file.name}`, error.message);
           }
         }
 
-        const resultContainer = document.getElementById("result");
-        if (result.length > 0) {
-          resultContainer.textContent = JSON.stringify(result, null, 2);
-        } else {
-          resultContainer.textContent = `Tidak ditemukan hasil untuk pencarian: "${searchWord}"`;
-        }
+        // Tampilkan hasil
+        document.body.textContent = JSON.stringify(result, null, 2);
       } catch (error) {
-        console.error("Error:", error);
-        document.getElementById("result").textContent =
-          "Terjadi kesalahan saat mencari: " + error.message;
+        document.body.textContent = `Terjadi kesalahan: ${error.message}`;
       }
-    };
+    }
 
-    function searchInJson(obj, searchWord) {
-      let results = [];
+    // Fungsi untuk mencari data dalam JSON
+    function searchInJson(json, query) {
+      const results = [];
 
-      if (typeof obj === "object") {
-        for (let key in obj) {
-          if (obj.hasOwnProperty(key)) {
-            const value = obj[key];
-
-            if (typeof value === "object") {
-              const nestedResults = searchInJson(value, searchWord);
-              if (nestedResults.length > 0) {
-                results.push(...nestedResults);
-              }
-            } else if (
-              typeof value === "string" &&
-              value.toLowerCase().includes(searchWord.toLowerCase())
-            ) {
-              results.push({ [key]: value });
+      function recursiveSearch(obj) {
+        if (typeof obj === "object" && obj !== null) {
+          for (const key in obj) {
+            if (typeof obj[key] === "string" && obj[key].includes(query)) {
+              results.push(obj); // Tambahkan seluruh objek yang mengandung query
+              return; // Stop pencarian di objek ini
+            } else {
+              recursiveSearch(obj[key]); // Rekursi ke dalam
             }
           }
         }
       }
 
+      recursiveSearch(json);
       return results;
     }
+
+    searchGitHubRepo();
   </script>
 </body>
 </html>
