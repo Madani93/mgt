@@ -26,7 +26,7 @@
     </style>
 </head>
 <body>
-    <h1>Hasil Pencarian di Repositori GitHub</h1>
+    <h1>Hasil Pencarian dalam File di Repositori GitHub</h1>
     <ul id="results"></ul>
 
     <script>
@@ -48,12 +48,14 @@
             // Lakukan pencarian di repositori menggunakan API GitHub
             searchGitHubRepo(repoOwner, repoName, query, token);
             
-            // Fungsi untuk mencari kata di repositori
+            // Fungsi untuk mencari kata dalam file di repositori
             function searchGitHubRepo(owner, repo, query, token) {
                 const apiUrl = `https://api.github.com/search/code?q=${query}+in:file+repo:${owner}/${repo}`;
 
                 // Tambahkan header untuk otentikasi menggunakan token jika tersedia
                 const headers = token ? { 'Authorization': 'token ' + token } : {};
+
+                console.log("Mencari dengan URL: " + apiUrl); // Debugging URL
 
                 $.get({
                     url: apiUrl,
@@ -68,15 +70,17 @@
                                 const result = `
                                     <li>
                                         <a href="${item.html_url}" target="_blank">
-                                            ${item.name} (in ${item.repository.name}) - ${item.path}
-                                        </a>
+                                            Ditemukan dalam file: ${item.name} - ${item.path}
+                                        </a><br>
+                                        <i>Baris: ${item.repository.name}</i>
                                     </li>
                                 `;
                                 $('#results').append(result);
                             });
                         }
                     },
-                    error: function() {
+                    error: function(error) {
+                        console.error(error); // Debugging error
                         $('#results').append('<li>Terjadi kesalahan saat mencari di repositori.</li>');
                     }
                 });
