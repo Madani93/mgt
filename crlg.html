@@ -3,28 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Repo</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        #results {
-            margin-top: 20px;
-        }
-        .result-item {
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .result-item pre {
-            background-color: #f4f4f4;
-            padding: 10px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-    </style>
+    <title>Search GitHub Repo</title>
 </head>
 <body>
     <h1>Search GitHub Repo</h1>
@@ -35,51 +14,39 @@
 
     <script>
         const queryParams = new URLSearchParams(window.location.search);
-        const query = queryParams.get('q');  // Query to search for
-        const token = queryParams.get('token');  // GitHub token
+        const query = queryParams.get('q');
+        const token = queryParams.get('token');
 
         if (!query || !token) {
             document.getElementById('results').innerHTML = 'Please provide both query and token in the URL.';
         } else {
             const repoOwner = 'Madani93';
             const repoName = 'sru1';
-            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-            const apiUrl = `${proxyUrl}https://api.github.com/search/code?q=${query}+repo:${repoOwner}/${repoName}&access_token=${token}`;
+            const apiUrl = `https://api.github.com/search/code?q=${query}+repo:${repoOwner}/${repoName}&access_token=${token}`;
 
-            // Function to fetch search results from GitHub API
             async function searchRepo() {
                 try {
                     const response = await fetch(apiUrl);
                     const data = await response.json();
-
-                    if (response.ok) {
-                        if (data.items && data.items.length > 0) {
-                            const resultsDiv = document.getElementById('results');
-                            resultsDiv.innerHTML = ''; // Clear previous results
-
-                            data.items.forEach(item => {
-                                const resultItem = document.createElement('div');
-                                resultItem.classList.add('result-item');
-                                resultItem.innerHTML = `
+                    
+                    if (data.items && data.items.length > 0) {
+                        let resultsHtml = '<h3>Results:</h3>';
+                        data.items.forEach(item => {
+                            resultsHtml += `
+                                <div>
                                     <strong>File:</strong> <a href="${item.html_url}" target="_blank">${item.name}</a>
-                                    <br><strong>Line:</strong> ${item.text_matches ? item.text_matches[0].fragment : 'Not available'}
-                                    <br><pre>${item.text_matches ? item.text_matches[0].fragment : 'No match found in content'}</pre>
-                                `;
-                                resultsDiv.appendChild(resultItem);
-                            });
-                        } else {
-                            document.getElementById('results').innerHTML = 'No results found.';
-                        }
+                                </div>
+                            `;
+                        });
+                        document.getElementById('results').innerHTML = resultsHtml;
                     } else {
-                        document.getElementById('results').innerHTML = `Error: ${data.message}`;
+                        document.getElementById('results').innerHTML = 'No results found.';
                     }
                 } catch (error) {
                     document.getElementById('results').innerHTML = 'Error fetching data from GitHub API.';
-                    console.error(error);
                 }
             }
 
-            // Start searching when page loads
             searchRepo();
         }
     </script>
