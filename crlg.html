@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GitHub JSON Search</title>
+  <title>Pencarian di GitHub</title>
 </head>
 <body>
   <script>
@@ -34,11 +34,11 @@
         const result = [];
 
         for (const file of files) {
-          if (file.name === "index" || !file.name.endsWith(".json")) {
-            continue; // Skip file yang bukan JSON atau bernama 'index'
+          if (file.name === "index") {
+            continue; // Skip file bernama 'index'
           }
 
-          // Ambil isi file JSON
+          // Ambil isi file teks
           const fileResponse = await fetch(file.download_url, {
             headers: { Authorization: `token ${token}` }
           });
@@ -50,14 +50,13 @@
 
           try {
             const fileText = await fileResponse.text();
-            const fileContent = JSON.parse(fileText); // Parse JSON
-            const foundData = searchInJson(fileContent, query);
+            const matchingLines = searchInText(fileText, query);
 
-            if (foundData.length > 0) {
-              result.push({ file: file.name, data: foundData });
+            if (matchingLines.length > 0) {
+              result.push({ file: file.name, lines: matchingLines });
             }
           } catch (error) {
-            console.warn(`Gagal memproses file JSON: ${file.name}`, error.message);
+            console.warn(`Gagal memproses file: ${file.name}`, error.message);
           }
         }
 
@@ -68,25 +67,10 @@
       }
     }
 
-    // Fungsi untuk mencari data dalam JSON
-    function searchInJson(json, query) {
-      const results = [];
-
-      function recursiveSearch(obj) {
-        if (typeof obj === "object" && obj !== null) {
-          for (const key in obj) {
-            if (typeof obj[key] === "string" && obj[key].includes(query)) {
-              results.push(obj); // Tambahkan seluruh objek yang mengandung query
-              return; // Stop pencarian di objek ini
-            } else {
-              recursiveSearch(obj[key]); // Rekursi ke dalam
-            }
-          }
-        }
-      }
-
-      recursiveSearch(json);
-      return results;
+    // Fungsi untuk mencari kata dalam teks
+    function searchInText(text, query) {
+      const lines = text.split("\n");
+      return lines.filter(line => line.includes(query));
     }
 
     searchGitHubRepo();
