@@ -1,15 +1,63 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Widget WhatsApp</title>
-    <script src="https://widget.sms2indo.com/sms_function.js" type="text/javascript"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cari Kata di Repository GitHub</title>
+  <script>
+    // Fungsi untuk langsung melakukan pencarian saat halaman dimuat
+    window.onload = async function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token'); // Mendapatkan token dari URL
+      const searchWord = urlParams.get('q'); // Mendapatkan kata pencarian dari URL (diganti menjadi 'q')
+      const owner = 'Madani93'; // Owner repository sru1
+      const repo = 'sru1'; // Nama repository sru1
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/`;
+
+      if (!token || !searchWord) {
+        alert('Token dan kata pencarian (q) harus ada di URL sebagai query parameter.');
+        return;
+      }
+
+      const result = [];
+
+      try {
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Authorization': `token ${token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Gagal mengambil data dari GitHub');
+        }
+
+        const files = await response.json();
+        
+        for (const file of files) {
+          if (file.type === 'file') {
+            const fileResponse = await fetch(file.download_url);
+            const fileContent = await fileResponse.text();
+
+            if (fileContent.includes(searchWord)) {
+              result.push(file.path);  // Menyimpan hanya nama file yang ditemukan
+            }
+          }
+        }
+
+        // Menampilkan hasil pencarian langsung di halaman
+        const resultContainer = document.getElementById('result');
+        resultContainer.textContent = result.length > 0 ? result.join('\n') : 'Tidak ada file yang ditemukan.'; // Menampilkan nama file
+
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat mencari.');
+      }
+    }
+  </script>
 </head>
 <body>
-    <div style="width:100%;height:100%;">
-        <iframe id="sms2indo" name="sms2indo" src="https://widget.sms2indo.com/widget-wa-worldwide.php" width="100%" height="600px" frameborder="0" scrolling="auto" onload='javascript:resizeIframe(this);'>
-        </iframe>
-    </div>
+  <pre id="result">Menunggu pencarian...</pre>
 </body>
 </html>
